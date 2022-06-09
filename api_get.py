@@ -107,7 +107,7 @@ filled_orders = pd.DataFrame(columns=['buyer', 'direction', 'id', 'price', 'quan
 
 traded_values = []
 bid_ask_spread = None
-earnings = load_earnings()
+# earnings = load_earnings()
 highest_buy = 100000000
 lowest_sell = 0
 
@@ -115,11 +115,11 @@ is_there_info = False
 
 MAX_STOCK = 30
 balance_stock = 0
-margin = 0.2
+margin = 0.01
 factor = 0.5
 
-target_price_new = 1100
-target_price_old = 1100
+target_price_new = 122
+target_price_old = 122
 
 prev_earning_release_length = len(load_earnings())
 
@@ -146,10 +146,10 @@ while True:
         sells = curr_order_book['sell']
         highest_buy = float(buys[len(buys) - 1][0])
         lowest_sell = float(sells[0][0])
-        print('highest_buy', highest_buy)
-        print('lowest_sell', lowest_sell)
-        bid_ask_spread = (highest_buy + lowest_sell) / 2
-        print('bid_ass_spread', bid_ask_spread)
+        # print('highest_buy', highest_buy)
+        # print('lowest_sell', lowest_sell)
+        # bid_ask_spread = (highest_buy + lowest_sell) / 2
+        # print('bid_ass_spread', bid_ask_spread)
 
     print('balance', balance)
     # if not has_event_happened:
@@ -158,13 +158,17 @@ while True:
         balance = send_req("balance")
         time.sleep(0.1)
         if balance['stock'] > -30:
-            order = sell(target_price_new * (1 + margin), math.abs(-MAX_STOCK - balance['stock']))
+            order = sell(target_price_new * (1 + margin), abs(-MAX_STOCK - balance['stock']))
+            print('sending', target_price_new * (1 + margin), abs(-MAX_STOCK - balance['stock']))
+            print(order)
     if lowest_sell < target_price_new * (1 - margin):
         cancel_all()
         balance = send_req("balance")
         time.sleep(0.1)
         if balance['stock'] < 30:
-            order = buy(target_price_new, MAX_STOCK - balance['stock'])
+            order = buy(target_price_new * (1 - margin), MAX_STOCK - balance['stock'])
+            print(target_price_new * (1 - margin), MAX_STOCK - balance['stock'])
+            print(order)
     # else:
     #     if target_price_new != target_price_old:
     #         cancel_all()
