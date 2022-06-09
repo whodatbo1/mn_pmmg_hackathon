@@ -8,6 +8,11 @@ import re
 import datetime
 from datetime import datetime
 import pandas as pd
+import nltk
+nltk.download('popular')
+from nrclex import NRCLex
+from textblob import TextBlob
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 
 api_key = "QUYCQ"
@@ -149,4 +154,104 @@ if __name__ == "__main__":
     news_df = scrape_text()
 
 
+
+
+
+###### SENTIMENT ANALYSIS ######
+
+######## NRCLEX / NLTK #########
+nrc_scores = []
+
+# Get a sentiment score for each comment
+for item in news_df.News:
+    NRCLex_object = NRCLex(item)
+    NRCLex_score = NRCLex_object.affect_frequencies
+    # because sometimes we get anticip and anticipation with values for anticip if there is no anticipation
+    if len(NRCLex_score.keys()) > 10:
+        del NRCLex_score['anticip']
+    else:
+        NRCLex_score['anticipation'] = NRCLex_score.pop('anticip')
+    nrc_scores.append(list(NRCLex_score.values())) # I need to create a list, because we can't pickle dictionary items
+
+
+# Create a dataframe of the scores
+df_NRCLex_scores = pd.DataFrame(nrc_scores, columns = NRCLex_score.keys())
+
+# Add the comment and time to the dataframe
+df_NRCLex_scores.insert(0,'text', news_df.News)
+df_NRCLex_scores.insert(1, 'time', news_df.Time)
+
+
+####### VADER ########
+
+# Initialize the Vader Sentiment
+vader_analyzer = SentimentIntensityAnalyzer()
+
+vader_scores = []
+
+# Get a sentiment score for each comment
+for item in news_df.News:
+    vader_score = vader_analyzer.polarity_scores(item)
+    vader_scores.append(list(vader_score.values())) # I need to create a list, because we can't pickle dictionary items
+
+# Create a dataframe of the scores
+df_vader_scores = pd.DataFrame(vader_scores, columns = vader_score.keys())
+
+# Add the comment and time to the dataframe
+df_vader_scores.insert(0,'text', news_df.News)
+df_vader_scores.insert(1, 'time', news_df.Time)
+
+
+######### TEXTBLOB ##########
+
+# polarity is negative/positive
+# subjectivity is objective = 0 and subjective = 1
+news_polarity = []
+news_subjectivity = []
+
+
+for item in news_df.News:
+    textblob_analyzer = TextBlob(item)
+    polarity = textblob_analyzer.sentiment.polarity
+    subjectivity = textblob_analyzer.sentiment.subjectivity
+    news_polarity.append(polarity)
+    news_subjectivity.append(subjectivity)
+
+df_textblob_scores = pd.DataFrame()
+df_textblob_scores['text'] = news_df.News
+df_textblob_scores['time'] = news_df.Time
+df_textblob_scores['polarity'] = news_polarity
+df_textblob_scores['subjectivity'] = news_subjectivity
+
+
+# To excel
+df_NRCLex_scores.to_excel('NRClex_scores.xlsx')
+df_textblob_scores.to_excel('Texblob_scores.xlsx')
+df_vader_scores.to_excel('Vader_scores.xlsx')
+
+
+prices_df["Time"] = pd.to_datetime(prices_df["Date"] + " " + prices_df["Time"])
+del prices_df["Date"]
+
+df_vader_scores["time"] = pd.to_datetime(df_vader_scores["time"])
+df_NRCLex_scores["time"] = pd.to_datetime(df_NRCLex_scores["time"])
+
+prices_df.sort_values("Time", 0, ascending=True, inplace = True)
+df_NRCLex_scores.sort_values("time", 0, ascending=True, inplace = True)
+
+start_index = 0
+added_scores = []
+
+for i, row in prices_df.iloc[1:].iterrows():
+    time = row.loc["Time"]
+    current_scores = []
+    for j in range(start_index, len(df_NRCLex_scores)):
+        start_index += 1
+        if df_NRCLex_scores.loc[:,"time"].iloc[j] < time:
+            current_scores.append(df_NRCLex_scores.iloc[j,:])
+        else:
+            added_scores.append(current_scores)
+            break
+            
+        
 
