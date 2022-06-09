@@ -46,14 +46,30 @@ def cancel_all():
         return Exception
     return post_req.json()
 
-
-print(send_req("balance"))
-time.sleep(0.3)
-print(send_req("orderbook"))
-time.sleep(0.3)
-print(send_req("orders/active"))
-time.sleep(0.3)
+# print(send_req("balance"))
+# time.sleep(0.3)
+# print(send_req("orderbook"))
+# time.sleep(0.3)
+# print(send_req("orders/active"))
+# time.sleep(0.3)
 print(send_req("trades"))
 time.sleep(0.3)
 
-print(cancel_order('BLGX000001166'))
+# print(cancel_order('BLGX000001166'))
+
+order_book = {}
+trades = {}
+active_orders = None
+balance = None
+
+while True:
+    curr_order_book = send_req("orderbook")
+    order_book[time.time()] = curr_order_book
+    time.sleep(0.2)
+    active_orders = send_req("orders/active")
+    time.sleep(0.2)
+    balance = send_req("balance")
+    print(curr_order_book, active_orders, balance)
+    
+    # if ...some_condition:
+    #     do trade
