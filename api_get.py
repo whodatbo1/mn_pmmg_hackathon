@@ -17,6 +17,29 @@ def send_req(link):
         return Exception
     return req.json()
 
+def send_order(p, q, d, tif):
+    headers = {
+        "API-Key": api_key,
+    }
+    data = {
+        "p": p,
+        "q": q,
+        "d": d,
+        "tif": tif
+    }
+    try:
+        req = requests.post(r"https://orderbookz.com/bluelagoon/api/submit",
+                   headers=headers, json=data, timeout=1)
+    except Exception:
+        print("Something went wrong")
+    return req
+
+def buy(price, quantity, IOC=False):
+    return send_order(price, quantity, "buy", "IOC" if IOC else "GTC")
+    
+def sell(price, quantity, IOC=False):
+    return send_order(price, quantity, "sell", "IOC" if IOC else "GTC")
+    
 
 def cancel_order(order_id):
     headers = {
