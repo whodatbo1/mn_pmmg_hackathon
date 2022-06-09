@@ -107,10 +107,12 @@ filled_orders = pd.DataFrame(columns=['buyer', 'direction', 'id', 'price', 'quan
 
 traded_values = []
 
+bid_ask_spread = None
+
 while True:
-    # curr_order_book = send_req("orderbook")
-    # order_book[time.time()] = curr_order_book
-    # time.sleep(0.2)
+    curr_order_book = send_req("orderbook")
+    order_book[time.time()] = curr_order_book
+    time.sleep(0.2)
 
     active_orders = get_active_orders()
     time.sleep(0.2)
@@ -118,7 +120,11 @@ while True:
     time.sleep(0.2)
     # balance = send_req("balance")
     # time.sleep(0.2)
-    # print(curr_order_book)
+    print(curr_order_book)
+    buys = curr_order_book['buy']
+    sells = curr_order_book['sell']
+    bid_ask_spread = (sells[0] + buys[len(buys) - 1]) / 2
+    print('bas', bid_ask_spread)
     # print('active_orders', active_orders)
     # print(balance)
     # print('trades', trades)
@@ -131,7 +137,7 @@ while True:
 
     filled_orders.sort_values(by='timestamp', ignore_index=True, inplace=True, ascending=False)
     last_traded_value = filled_orders.iloc[0]['price']
-    # print('ltv', last_traded_value)
+    print('ltv', last_traded_value)
     traded_values.append(last_traded_value)
 
 # {'buyer': 'Diana Asset Management', 'direction': 'sell', 'id': 'BLGT000000110', 'price': '110.1', 'quantity': 25, 'seller': 'Jupiter Asset Management', 'timestamp': '09 06 2022 15:22:55.928507'
