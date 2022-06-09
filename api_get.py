@@ -23,9 +23,10 @@ def send_order(p, q, d, tif):
     headers = {
         "API-Key": api_key,
     }
+    print('p', p)
     data = {
-        "p": p,
-        "q": q,
+        "p": str(p),
+        "q": str(q),
         "d": d,
         "tif": tif
     }
@@ -35,7 +36,6 @@ def send_order(p, q, d, tif):
     except Exception:
         print("Something went wrong")
         return
-    # active_orders[req.json()[]]
     return req.json()
 
 
@@ -90,7 +90,7 @@ def load_earnings():
     return pd.read_csv('earnings.csv')
 
 
-def update_target_price(historical_evidence = -3354.27):
+def update_target_price(historical_evidence=-3354.27):
     prices = load_earnings()
     profit = prices["Profit over Previous Period"]
     profits = []
@@ -98,7 +98,7 @@ def update_target_price(historical_evidence = -3354.27):
         profits.append(float(j))
     profits = profits[::-1]
     number_of_profits = len(profits)
-    P = (5 - number_of_profits) * historical_evidence + sum(profits)
+    P = max(0, (5 - number_of_profits)) * historical_evidence + sum(profits)
     return (100_000 + P) / 1_000
 
 order_book = {}
@@ -123,21 +123,23 @@ is_there_info = False
 
 MAX_STOCK = 30
 balance_stock = 0
-margin = 0.01
+margin = 0.2
 factor = 0.5
 
-target_price_new = 122
-target_price_old = 122
+# target_price_new = 100
+target_price_new = update_target_price()
+# target_price_old = 100
 
 prev_earning_release_length = len(load_earnings())
-
+# print(buy(128.0, 30))
 while True:
 
+    print(target_price_new)
     has_event_happened = len(load_earnings()) > prev_earning_release_length
 
     if has_event_happened:
         margin *= factor
-        update_target_price()
+    target_price_new = update_target_price()
 
     # cancel_all()
     curr_order_book = send_req("orderbook")
@@ -175,17 +177,8 @@ while True:
         time.sleep(0.1)
         if balance['stock'] < 30:
             order = buy(target_price_new * (1 - margin), MAX_STOCK - balance['stock'])
-            print(target_price_new * (1 - margin), MAX_STOCK - balance['stock'])
+            print('sednign', target_price_new * (1 - margin), MAX_STOCK - balance['stock'])
             print(order)
-    # else:
-    #     if target_price_new != target_price_old:
-    #         cancel_all()
-    #         balance = send_req("balance")
-    #         if highest_buy > target_price_new and balance['stock'] > -30:
-    #             order = sell(target_price_new, math.abs(-MAX_STOCK - balance['stock']))
-    #
-    #         if lowest_sell < target_price_new and balance['stock'] < 30:
-    #             order = buy(target_price_new, MAX_STOCK - balance['stock'])
 
     time.sleep(0.2)
     active_orders = get_active_orders()
