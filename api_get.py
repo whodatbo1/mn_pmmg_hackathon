@@ -1,25 +1,21 @@
 import requests
 import time
 import datetime
+import pandas as pd
 
 api_key = "QUYCQ"
-active_orders = None
 
 
 def send_req(link):
     headers = {
         "API-Key": api_key,
     }
-    params = {
-        "page": 1,
-        "per_page": 100
-    }
     try:
         req = requests.get(r"https://orderbookz.com/bluelagoon/api/"+link,
-                   headers=headers, json=params, timeout=1)
+                   headers=headers, timeout=2)
     except Exception:
         print("Request timed out, trying again")
-        return Exception
+        return
     return req.json()
 
 
@@ -44,6 +40,10 @@ def send_order(p, q, d, tif):
 
 def get_trades():
     return send_req("trades")
+
+
+def get_active_orders():
+    return send_req("orders/active")
 
 
 def buy(price, quantity, IOC=False):
@@ -99,19 +99,39 @@ trades = {}
 balance = None
 last_traded_value = None
 curr_order_book = None
+active_orders = None
+
+filled_orders = pd.DataFrame(columns=['buyer', 'direction', 'id', 'price', 'quantity', 'seller', 'timestamp'])
 
 # Event trigger based on positive / negative sentiment
 
-# while True:
-#     curr_order_book = send_req("orderbook")
-#     order_book[time.time()] = curr_order_book
-#     time.sleep(0.2)
-#
-#     active_orders = send_req("orders/active")
-#     time.sleep(0.2)
-#
-#     balance = send_req("balance")
-#     print(curr_order_book, active_orders, balance)
+traded_values = []
 
-    # if ...some_condition:
-    #     do trade
+while True:
+    # curr_order_book = send_req("orderbook")
+    # order_book[time.time()] = curr_order_book
+    # time.sleep(0.2)
+
+    active_orders = get_active_orders()
+    time.sleep(0.2)
+    trades = get_trades()
+    time.sleep(0.2)
+    # balance = send_req("balance")
+    # time.sleep(0.2)
+    # print(curr_order_book)
+    # print('active_orders', active_orders)
+    # print(balance)
+    # print('trades', trades)
+    if trades:
+        for trade in trades['data']:
+            trade_id = trade['id']
+            if trade_id not in filled_orders['id'].unique():
+                trade_df = pd.DataFrame(trade, index=[len(filled_orders)])
+                filled_orders = pd.concat([filled_orders, trade_df], axis=0)
+
+    filled_orders.sort_values(by='timestamp', ignore_index=True, inplace=True, ascending=False)
+    last_traded_value = filled_orders.iloc[0]['price']
+    # print('ltv', last_traded_value)
+    traded_values.append(last_traded_value)
+
+# {'buyer': 'Diana Asset Management', 'direction': 'sell', 'id': 'BLGT000000110', 'price': '110.1', 'quantity': 25, 'seller': 'Jupiter Asset Management', 'timestamp': '09 06 2022 15:22:55.928507'
