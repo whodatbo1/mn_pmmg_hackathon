@@ -1,12 +1,14 @@
 """
 Scrape the website for texts and prices
 """
+import time
 
 from bs4 import BeautifulSoup as bs
 import requests
 import re
 import datetime
 from datetime import datetime
+from datetime import timedelta
 import pandas as pd
 
 
@@ -19,6 +21,7 @@ def find_between(s, first, last):
         return re.findall(regex, s)
     except ValueError:
         return -1
+
 
 def get_response_prices() -> requests.models.Response:
     headers = {
@@ -33,18 +36,21 @@ def get_response_news() -> requests.models.Response:
     }
     return requests.get('http://orderbookz.com/news', headers=headers, verify=False)
 
+
+time_until_next_earnings = None
+
+
 def scrape_prices() -> None:
     """
     Scrape date, time and price.
     :return:
     """
     response = get_response_prices()
-    soup = bs(response.text, "lxml")
+    soup = bs(response.text, "html")
     container = None
     try:
         container = soup.find_all("tr")[1:]
     except ValueError as e:
-
         print(e)
 
 
@@ -52,10 +58,10 @@ def scrape_prices() -> None:
     time = "9/6/2022 " + soup.find('p').getText().split(" ")[-1]
     print(time)
     time_untill_update = datetime.strptime(time, "%d/%m/%Y %H:%M:%S")
-    current_time = datetime.now()
+    current_time = datetime.now() - timedelta(hours=1)
     print(f"time to update {time_untill_update} time now {current_time}")
     diff = time_untill_update - current_time
-    print(diff)
+    print(diff.seconds)
 
     # # Get the prices
     l = []
@@ -66,25 +72,25 @@ def scrape_prices() -> None:
             line = str(line)
             if len(line) == 0:
                 continue
-            data= find_between(line, "<td>", "</td>")
+            data = find_between(line, "<td>", "</td>")
             try:
                 row.append(data[0])
             except Exception as e:
-                print(e)
+                # print(e)
+                pass
         l.append(row)
 
-    print(f"the list l {l}")
-    print(len(l))
-    prices_df = pd.DataFrame(l, columns = ["Date", "Time","Profit over Previous Period"])
-    print(prices_df)
-
-
+    # print(f"the list l {l}")
+    # print(len(l))
+    prices_df = pd.DataFrame(l, columns=["Date", "Time", "Profit over Previous Period"])
+    # print(prices_df)
+    prices_df.to_csv('earnings.csv')
     # add the dataframe
 
-    labels = ["Date", "Time", "Profit"]
+    # labels = ["Date", "Time", "Profit"]
 
+    return diff.seconds - 5
     # TODO: clean the data to the format that we want
-
 
 
 def scrape_text() -> None:
@@ -93,7 +99,7 @@ def scrape_text() -> None:
     :return:
     """
     response = get_response_news()
-    soup = bs(response.text, "lxml")
+    soup = bs(response.text, "html")
     try:
         container = soup.find_all("div", {"class": "card text-white bg-success"})
         print(container)
@@ -106,6 +112,8 @@ def scrape_text() -> None:
 
 if __name__ == "__main__":
     # print(":ff")
-    scrape_prices()
+    while True:
+        scrape_prices()
+        # time.sleep(1)
     # scrape_text()
 
