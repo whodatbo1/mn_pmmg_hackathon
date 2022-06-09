@@ -5,8 +5,11 @@ Scrape the website for texts and prices
 from bs4 import BeautifulSoup as bs
 import requests
 import re
+import datetime
+from datetime import datetime
 import pandas as pd
-from IPython.display import display
+
+
 api_key = "QUYCQ"
 
 
@@ -40,10 +43,21 @@ def scrape_prices() -> None:
     container = None
     try:
         container = soup.find_all("tr")[1:]
-        print(container)
     except ValueError as e:
+
         print(e)
 
+
+    # Get the time of the next update
+    time = "9/6/2022 " + soup.find('p').getText().split(" ")[-1]
+    print(time)
+    time_untill_update = datetime.strptime(time, "%d/%m/%Y %H:%M:%S")
+    current_time = datetime.now()
+    print(f"time to update {time_untill_update} time now {current_time}")
+    diff = time_untill_update - current_time
+    print(diff)
+
+    # # Get the prices
     l = []
     print("\n\n")
     for th in container:
@@ -65,9 +79,9 @@ def scrape_prices() -> None:
     print(prices_df)
 
 
-    # # add the dataframe
-    #
-    # labels = ["Date", "Time", "Profit"]
+    # add the dataframe
+
+    labels = ["Date", "Time", "Profit"]
 
     # TODO: clean the data to the format that we want
 
@@ -86,6 +100,7 @@ def scrape_text() -> None:
 
     except ValueError as e:
         print(e)
+
     # TODO: clean data and put it in the correct format
 
 
