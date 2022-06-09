@@ -87,8 +87,6 @@ def scrape_prices() -> None:
     prices_df.to_csv('earnings.csv')
     # add the dataframe
 
-    # labels = ["Date", "Time", "Profit"]
-
     return diff.seconds - 5
     # TODO: clean the data to the format that we want
 
@@ -102,10 +100,45 @@ def scrape_text() -> None:
     soup = bs(response.text, "html")
     try:
         container = soup.find_all("div", {"class": "card text-white bg-success"})
-        print(container)
 
     except ValueError as e:
         print(e)
+
+    # card - header
+    try:
+        container = soup.find_all("div", {"class": "card-header"})
+        for i in container:
+            company_name = i.get_text().strip()
+            l.append([company_name])
+            print(company_name)
+
+    except ValueError as e:
+        print(e)
+   # card-body
+    try:
+        container = soup.find_all("div", {"class": "card-body"})
+        print(type(container[0]))
+        print(container)
+        for i, text in enumerate(container):
+            text = text.get_text().strip()
+            l[i].append(text)
+
+    except ValueError as e:
+        print(e)
+
+    try:
+        container = soup.find_all("div", {"class": "card-footer text-muted"})
+        print(container)
+        for i, text in enumerate(container):
+            text = text.get_text().strip()
+            l[i].append(text)
+
+    except ValueError as e:
+        print(e)
+    print(l)
+
+    prices_df = pd.DataFrame(l, columns=["company", "Message", "Time"])
+    print(prices_df)
 
     # TODO: clean data and put it in the correct format
 
