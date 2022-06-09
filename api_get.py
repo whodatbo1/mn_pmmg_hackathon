@@ -90,8 +90,16 @@ def load_earnings():
     return pd.read_csv('earnings.csv')
 
 
-def update_target_price():
-    pass
+def update_target_price(historical_evidence = -3354.27):
+    prices = load_earnings()
+    profit = prices["Profit over Previous Period"]
+    profits = []
+    for j in profit:
+        profits.append(float(j))
+    profits = profits[::-1]
+    number_of_profits = len(profits)
+    P = (5 - number_of_profits) * historical_evidence + sum(profits)
+    return (100_000 + P) / 1_000
 
 order_book = {}
 trades = {}
