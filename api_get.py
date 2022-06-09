@@ -25,8 +25,8 @@ def send_order(p, q, d, tif):
     }
     print('p', p)
     data = {
-        "p": str(p),
-        "q": str(q),
+        "p": p,
+        "q": q,
         "d": d,
         "tif": tif
     }
@@ -90,7 +90,7 @@ def load_earnings():
     return pd.read_csv('earnings.csv')
 
 
-def update_target_price(historical_evidence=-3354.27):
+def update_target_price(historical_evidence = -3354.27):
     prices = load_earnings()
     profit = prices["Profit over Previous Period"]
     profits = []
@@ -161,12 +161,13 @@ while True:
         # bid_ask_spread = (highest_buy + lowest_sell) / 2
         # print('bid_ass_spread', bid_ask_spread)
 
-    print('balance', balance)
+    # print('balance', balance)
     # if not has_event_happened:
     if highest_buy > target_price_new * (1 + margin):
         cancel_all()
         balance = send_req("balance")
         time.sleep(0.1)
+        print(balance)
         if balance['stock'] > -30:
             order = sell(target_price_new * (1 + margin), abs(-MAX_STOCK - balance['stock']))
             print('sending', target_price_new * (1 + margin), abs(-MAX_STOCK - balance['stock']))
@@ -174,6 +175,7 @@ while True:
     if lowest_sell < target_price_new * (1 - margin):
         cancel_all()
         balance = send_req("balance")
+        print(balance)
         time.sleep(0.1)
         if balance['stock'] < 30:
             order = buy(target_price_new * (1 - margin), MAX_STOCK - balance['stock'])
