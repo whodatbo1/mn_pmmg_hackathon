@@ -59,7 +59,11 @@ def get_response_news() -> requests.models.Response:
 
     return requests.get('https://orderbookz.com/news', cookies=cookies, headers=headers)
 
-def scrape_prices():
+def scrape_prices() -> None:
+    """
+    Scrape date, time and price.
+    :return:
+    """
     response = get_response_prices()
     soup = bs(response.text, "lxml")
     try:
@@ -69,23 +73,27 @@ def scrape_prices():
     except ValueError as e:
         print(e)
 
-    # TODO: clean the data
+    # TODO: clean the data to the format that we want
 
 
 
-def scrape_text():
+def scrape_text() -> None:
+    """
+    Scrapes the news including company name and the text itself.
+    :return:
+    """
     response = get_response_news()
     soup = bs(response.text, "lxml")
     try:
-        container = soup.find_all("tr")
+        container = soup.find_all("div", {"class": "card text-white bg-success"})
         print(container)
 
     except ValueError as e:
         print(e)
-    pass
-
+    # TODO: clean data and put it in the correct format
 
 
 if __name__ == "__main__":
-    print(rep)
-    scrape_prices()
+    # scrape_prices()
+    scrape_text()
+
