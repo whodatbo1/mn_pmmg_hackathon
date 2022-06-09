@@ -61,8 +61,7 @@ def scrape_prices() -> None:
 
     print(f"the list l {l}")
     prices_df = pd.dataframe(l, ["Date", "Time","Profit over Previous Period"])
-    display(df)
-
+    print(prices_df)
 
 
     # # add the dataframe
