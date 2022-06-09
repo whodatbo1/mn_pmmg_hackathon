@@ -3,19 +3,25 @@ import time
 import datetime
 
 api_key = "QUYCQ"
+active_orders = None
 
 
 def send_req(link):
     headers = {
         "API-Key": api_key,
     }
+    params = {
+        "page": 1,
+        "per_page": 100
+    }
     try:
         req = requests.get(r"https://orderbookz.com/bluelagoon/api/"+link,
-                   headers=headers, timeout=1)
+                   headers=headers, json=params, timeout=1)
     except Exception:
         print("Request timed out, trying again")
         return Exception
     return req.json()
+
 
 def send_order(p, q, d, tif):
     headers = {
@@ -32,11 +38,18 @@ def send_order(p, q, d, tif):
                    headers=headers, json=data, timeout=1)
     except Exception:
         print("Something went wrong")
-    return req
+    # active_orders[req.json()[]]
+    return req.json()
+
+
+def get_trades():
+    return send_req("trades")
+
 
 def buy(price, quantity, IOC=False):
     return send_order(price, quantity, "buy", "IOC" if IOC else "GTC")
-    
+
+
 def sell(price, quantity, IOC=False):
     return send_order(price, quantity, "sell", "IOC" if IOC else "GTC")
     
@@ -75,24 +88,30 @@ def cancel_all():
 # time.sleep(0.3)
 # print(send_req("orders/active"))
 # time.sleep(0.3)
-print(send_req("trades"))
+print(get_trades())
 time.sleep(0.3)
 
 # print(cancel_order('BLGX000001166'))
 
 order_book = {}
 trades = {}
-active_orders = None
-balance = None
 
-while True:
-    curr_order_book = send_req("orderbook")
-    order_book[time.time()] = curr_order_book
-    time.sleep(0.2)
-    active_orders = send_req("orders/active")
-    time.sleep(0.2)
-    balance = send_req("balance")
-    print(curr_order_book, active_orders, balance)
-    
+balance = None
+last_traded_value = None
+curr_order_book = None
+
+# Event trigger based on positive / negative sentiment
+
+# while True:
+#     curr_order_book = send_req("orderbook")
+#     order_book[time.time()] = curr_order_book
+#     time.sleep(0.2)
+#
+#     active_orders = send_req("orders/active")
+#     time.sleep(0.2)
+#
+#     balance = send_req("balance")
+#     print(curr_order_book, active_orders, balance)
+
     # if ...some_condition:
     #     do trade
