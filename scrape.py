@@ -12,7 +12,6 @@ def get_response_prices() -> requests.models.Response:
     headers = {
         "API-Key": api_key,
     }
-
     return requests.get('https://orderbookz.com/company', headers=headers)
 
 
@@ -20,7 +19,6 @@ def get_response_news() -> requests.models.Response:
     headers = {
         "API-Key": api_key,
     }
-
     return requests.get('https://orderbookz.com/news', headers=headers, verify=False)
 
 def scrape_prices() -> None:
